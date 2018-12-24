@@ -91,7 +91,7 @@ public class PostgresPlugin implements JdbiPlugin {
         jdbi.registerArgument(new HStoreArgumentFactory());
         jdbi.registerArgument(new MacAddrArgumentFactory());
         jdbi.registerArgument(new UUIDArgumentFactory());
-        db.registerArgument(new EnumSetArgumentFactory());
+        jdbi.registerArgument(new EnumSetArgumentFactory());
 
         jdbi.registerArrayType(int.class, "integer");
         jdbi.registerArrayType(Integer.class, "integer");
@@ -109,7 +109,7 @@ public class PostgresPlugin implements JdbiPlugin {
         jdbi.registerColumnMapper(new MacAddrColumnMapper());
         jdbi.registerColumnMapper(new DurationColumnMapperFactory());
         jdbi.registerColumnMapper(new PeriodColumnMapperFactory());
-        db.registerColumnMapper(new EnumSetMapperFactory());
+        jdbi.registerColumnMapper(new EnumSetMapperFactory());
 
         // legacy unqualified HSTORE
         jdbi.registerArgument(new HStoreArgumentFactory()::build);

@@ -13,32 +13,34 @@
  */
 package org.jdbi.v3.postgres;
 
-import org.jdbi.v3.core.StatementContext;
-import org.jdbi.v3.core.mapper.ColumnMapper;
-import org.jdbi.v3.core.mapper.ColumnMapperFactory;
-import org.jdbi.v3.core.util.GenericTypes;
-
 import java.lang.reflect.Type;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.jdbi.v3.core.config.ConfigRegistry;
+import org.jdbi.v3.core.generic.GenericTypes;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.mapper.ColumnMapperFactory;
 
 public class EnumSetMapperFactory implements ColumnMapperFactory {
-
     @Override
-    @SuppressWarnings("unchecked")
-    public Optional<ColumnMapper<?>> build(Type type, StatementContext ctx) {
+    public Optional<ColumnMapper<?>> build(Type type, ConfigRegistry config) {
         Class<?> erasedType = GenericTypes.getErasedType(type);
-        if (erasedType == EnumSet.class) {
-            Optional<Type> genericParameter = GenericTypes.findGenericParameter(type, EnumSet.class);
-            Type type1 = genericParameter
-                    .orElseThrow(() -> new IllegalArgumentException("No generic information for " + type));
-            if (Enum.class.isAssignableFrom((Class<?>) type1)) {
-                return Optional.of(new EnumSetColumnMapper<>((Class<Enum>) type1));
-            } else {
-                throw new IllegalArgumentException("Generic type is not enum");
-            }
-        }
-        return Optional.empty();
-    }
 
+        // TODO never matches, my guess is the collection type is unwrapped to be collected into later
+        // TODO we might need to use a qualifier for all this "special postgres enum handling" stuff, actually
+        if (erasedType != EnumSet.class) {
+            return Optional.empty();
+        }
+
+        Type enumType = GenericTypes.findGenericParameter(type, EnumSet.class)
+            .orElseThrow(() -> new IllegalArgumentException("No generic information for " + type));
+
+        if (Enum.class.isAssignableFrom((Class<?>) enumType)) {
+            @SuppressWarnings("unchecked")
+            Class<Enum> enumClass = (Class<Enum>) enumType;
+            return Optional.of(new EnumSetColumnMapper<>(enumClass));
+        } else {
+            throw new IllegalArgumentException("Generic type of " + type + " is not an enum");
+        }
+    }
 }

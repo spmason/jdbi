@@ -13,27 +13,27 @@
  */
 package org.jdbi.v3.postgres;
 
-import org.jdbi.v3.core.StatementContext;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.argument.ArgumentFactory;
-import org.jdbi.v3.core.util.GenericTypes;
-
 import java.lang.reflect.Type;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.jdbi.v3.core.argument.Argument;
+import org.jdbi.v3.core.argument.ArgumentFactory;
+import org.jdbi.v3.core.config.ConfigRegistry;
+import org.jdbi.v3.core.generic.GenericTypes;
 
 public class EnumSetArgumentFactory implements ArgumentFactory {
-
     @Override
-    @SuppressWarnings("unchecked")
-    public Optional<Argument> build(Type type, Object value, StatementContext ctx) {
+    public Optional<Argument> build(Type type, Object value, ConfigRegistry config) {
         Class<?> erasedType = GenericTypes.getErasedType(type);
-        if (EnumSet.class.isAssignableFrom(erasedType)) {
-            Optional<Type> genericParameter = GenericTypes.findGenericParameter(type, EnumSet.class);
-            Class<Enum<?>> enumType = (Class<Enum<?>>) genericParameter
-                    .orElseThrow(() -> new IllegalArgumentException("No generic type information for " + type));
-            return Optional.of(new EnumSetArgument(enumType, (EnumSet<?>) value));
+
+        if (!EnumSet.class.isAssignableFrom(erasedType)) {
+            return Optional.empty();
         }
-        return Optional.empty();
+
+        Type enumType = GenericTypes.findGenericParameter(type, EnumSet.class)
+                .orElseThrow(() -> new IllegalArgumentException("No generic type information for " + type));
+        @SuppressWarnings("unchecked")
+        Class<Enum<?>> enumClass = (Class) enumType;
+        return Optional.of(new EnumSetArgument(enumClass, (EnumSet<?>) value));
     }
 }

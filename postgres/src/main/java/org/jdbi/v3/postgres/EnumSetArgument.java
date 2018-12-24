@@ -13,19 +13,17 @@
  */
 package org.jdbi.v3.postgres;
 
-import org.jdbi.v3.core.StatementContext;
-import org.jdbi.v3.core.argument.Argument;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.EnumSet;
+import org.jdbi.v3.core.argument.Argument;
+import org.jdbi.v3.core.statement.StatementContext;
 
 public class EnumSetArgument implements Argument {
-
     private Enum<?>[] enumConstants;
     private EnumSet<?> elements;
 
-    public EnumSetArgument(Class<Enum<?>> enumType, EnumSet<?> elements) {
+    EnumSetArgument(Class<Enum<?>> enumType, EnumSet<?> elements) {
         this.elements = elements;
         enumConstants = enumType.getEnumConstants();
     }

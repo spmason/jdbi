@@ -13,56 +13,63 @@
  */
 package org.jdbi.v3.postgres;
 
-import org.jdbi.v3.core.PreparedBatch;
-import org.jdbi.v3.core.util.GenericType;
-import org.jdbi.v3.sqlobject.SqlQuery;
-import org.jdbi.v3.sqlobject.SqlUpdate;
+import java.util.EnumSet;
+import java.util.List;
+import org.jdbi.v3.core.generic.GenericType;
+import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
+import org.jdbi.v3.testing.JdbiRule;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.EnumSet;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestEnumSets {
+    private static final GenericType<EnumSet<Platform>> PLATFORM_SET = new GenericType<EnumSet<Platform>>() {};
 
-    private static final GenericType<EnumSet<Platform>> PLATFORM_SET = new GenericType<EnumSet<Platform>>() {
-    };
-
+    // postgres is kinda slow so this test is set up to reuse a single instance
     @ClassRule
-    public static PostgresDbRule db = new PostgresDbRule();
+    public static JdbiRule db = PostgresDbRule.rule();
 
     private VideoDao videoDao;
 
     @Before
-    public void setupDbi() throws Exception {
-        db.getSharedHandle().useTransaction((h, status) -> {
+    public void setupDbi() {
+        db.getHandle().useTransaction(h -> {
             h.execute("drop table if exists videos");
             h.execute("create table videos (id int primary key, supported_platforms bit(5))");
+
             PreparedBatch batch = h.prepareBatch("insert into videos(id, supported_platforms) values (:id,:supported_platforms::varbit)");
-            batch.add()
-                    .bind("id", 0)
-                    .bindByType("supported_platforms", EnumSet.of(Platform.IOS, Platform.ANDROID, Platform.WEB), PLATFORM_SET);
-            batch.add()
-                    .bind("id", 1)
-                    .bindByType("supported_platforms", EnumSet.of(Platform.SMART_TV), PLATFORM_SET);
-            batch.add()
-                    .bind("id", 2)
-                    .bindByType("supported_platforms", EnumSet.of(Platform.ANDROID, Platform.STB), PLATFORM_SET);
-            batch.add()
-                    .bind("id", 3)
-                    .bindByType("supported_platforms", EnumSet.of(Platform.IOS, Platform.WEB), PLATFORM_SET);
-            batch.add()
-                    .bind("id", 4)
-                    .bindByType("supported_platforms", EnumSet.noneOf(Platform.class), PLATFORM_SET);
-            batch.add()
-                    .bind("id", 5)
-                    .bindByType("supported_platforms", null, PLATFORM_SET);
+            batch
+                .bind("id", 0)
+                .bindByType("supported_platforms", EnumSet.of(Platform.IOS, Platform.ANDROID, Platform.WEB), PLATFORM_SET)
+                .add();
+            batch
+                .bind("id", 1)
+                .bindByType("supported_platforms", EnumSet.of(Platform.SMART_TV), PLATFORM_SET)
+                .add();
+            batch
+                .bind("id", 2)
+                .bindByType("supported_platforms", EnumSet.of(Platform.ANDROID, Platform.STB), PLATFORM_SET)
+                .add();
+            batch
+                .bind("id", 3)
+                .bindByType("supported_platforms", EnumSet.of(Platform.IOS, Platform.WEB), PLATFORM_SET)
+                .add();
+            batch
+                .bind("id", 4)
+                .bindByType("supported_platforms", EnumSet.noneOf(Platform.class), PLATFORM_SET)
+                .add();
+            batch
+                .bind("id", 5)
+                .bindByType("supported_platforms", null, PLATFORM_SET)
+                .add();
             batch.execute();
         });
-        videoDao = db.getSharedHandle().attach(VideoDao.class);
+
+        videoDao = db.getHandle().attach(VideoDao.class);
     }
 
     @Test
@@ -140,7 +147,7 @@ public class TestEnumSets {
     }
 
     private EnumSet<Platform> getSupportedPlatforms(int id) {
-        return db.getSharedHandle()
+        return db.getHandle()
                 .createQuery("select supported_platforms from videos where id=:id")
                 .bind("id", id)
                 .mapTo(PLATFORM_SET)
