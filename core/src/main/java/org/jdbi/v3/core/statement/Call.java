@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.argument.Argument;
@@ -82,24 +84,40 @@ public class Call extends SqlStatement<Call> {
      * @return the output parameters resulting from the invocation.
      */
     public OutParameters invoke() {
+        return invoke(Function.identity());
+    }
+
+    public void invoke(Consumer<OutParameters> consumer) {
         try {
-            final PreparedStatement stmt = this.internalExecute();
-            OutParameters out = new OutParameters();
-            for (OutParamArgument param : params) {
-                Object obj = param.map((CallableStatement) stmt);
-
-                // convert from JDBC 1-based position to Jdbi's 0-based
-                int index = param.position - 1;
-                out.getMap().put(index, obj);
-
-                if (param.name != null) {
-                    out.getMap().put(param.name, obj);
-                }
-            }
-            return out;
+            consumer.accept(internalInvoke());
         } finally {
             close();
         }
+    }
+
+    public <T> T invoke(Function<OutParameters, T> function) {
+        try {
+            return function.apply(internalInvoke());
+        } finally {
+            close();
+        }
+    }
+
+    private OutParameters internalInvoke() {
+        final PreparedStatement stmt = this.internalExecute();
+        OutParameters out = new OutParameters();
+        for (OutParamArgument param : params) {
+            Object obj = param.map((CallableStatement) stmt);
+
+            // convert from JDBC 1-based position to Jdbi's 0-based
+            int index = param.position - 1;
+            out.getMap().put(index, obj);
+
+            if (param.name != null) {
+                out.getMap().put(param.name, obj);
+            }
+        }
+        return out;
     }
 
     // TODO tostring?

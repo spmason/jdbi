@@ -2328,6 +2328,8 @@ Now we can extract the result(s) from `OutParameters`:
 include::{exampledir}/CallTest.java[tags=getOutParameters]
 ----
 
+Occasionally
+
 [WARNING]
 Due to design constraints within JDBC, the parameter data types available
 through `OutParameters` is limited to those types supported directly by JDBC.
