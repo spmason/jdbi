@@ -147,10 +147,10 @@ public class FieldMapper<T> implements RowMapper<T> {
 
                     findColumnIndex(paramName, columnNames, columnNameMatchers, () -> debugName(field))
                         .ifPresent(index -> {
-                            QualifiedType<?> type = QualifiedType.of(field.getGenericType())
+                            QualifiedType<?> fieldType = QualifiedType.of(field.getGenericType())
                                 .withAnnotations(ctx.getConfig(Qualifiers.class).findFor(field));
                             @SuppressWarnings("unchecked")
-                            ColumnMapper<?> mapper = ctx.findColumnMapperFor(type)
+                            ColumnMapper<?> mapper = ctx.findColumnMapperFor(fieldType)
                                 .orElse((ColumnMapper) (r, n, c) -> r.getObject(n));
                             mappers.add(new SingleColumnMapper<>(mapper, index + 1));
                             fields.add(field);

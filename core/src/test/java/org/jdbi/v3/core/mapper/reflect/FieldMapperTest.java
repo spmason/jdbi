@@ -42,27 +42,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 public class FieldMapperTest {
-
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
-
     @Rule
     public H2DatabaseRule dbRule = new H2DatabaseRule().withSomething();
 
     @Mock
-    ResultSet resultSet;
-
+    private ResultSet resultSet;
     @Mock
-    ResultSetMetaData resultSetMetaData;
+    private ResultSetMetaData resultSetMetaData;
 
-    Handle handle = HandleAccess.createHandle();
-    StatementContext ctx = StatementContextAccess.createContext(handle);
-
-    RowMapper<SampleBean> mapper = FieldMapper.of(SampleBean.class);
+    private Handle sharedHandle;
+    private Handle handle = HandleAccess.createHandle();
+    private StatementContext ctx = StatementContextAccess.createContext(handle);
+    private RowMapper<SampleBean> sampleBeanMapper = FieldMapper.of(SampleBean.class);
 
     @Before
     public void setUpMocks() throws SQLException {
         when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
+
+        sharedHandle = dbRule.getSharedHandle();
     }
 
     private void mockColumns(String... columns) throws SQLException {
@@ -80,7 +79,7 @@ public class FieldMapperTest {
         when(resultSet.getLong(1)).thenReturn(aLongVal);
         when(resultSet.wasNull()).thenReturn(false);
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         assertThat(sampleBean.getLongField()).isEqualTo(aLongVal);
     }
@@ -89,7 +88,7 @@ public class FieldMapperTest {
     public void shouldHandleEmptyResult() throws Exception {
         mockColumns();
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         assertThat(sampleBean).isNotNull();
     }
@@ -102,7 +101,7 @@ public class FieldMapperTest {
         when(resultSet.getLong(1)).thenReturn(aLongVal);
         when(resultSet.wasNull()).thenReturn(false);
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         assertThat(sampleBean.getLongField()).isEqualTo(aLongVal);
 
@@ -115,7 +114,7 @@ public class FieldMapperTest {
         when(resultSet.getLong(1)).thenReturn(0L);
         when(resultSet.wasNull()).thenReturn(true);
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         assertThat(sampleBean.getLongField()).isNull();
     }
@@ -123,7 +122,7 @@ public class FieldMapperTest {
     @Test
     public void shouldThrowOnTotalMismatch() throws Exception {
         mockColumns("somethingElseEntirely");
-        assertThatThrownBy(() -> mapper.map(resultSet, ctx)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> sampleBeanMapper.map(resultSet, ctx)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -140,7 +139,7 @@ public class FieldMapperTest {
         when(resultSet.getBigDecimal(4)).thenReturn(aBigDecimal);
         when(resultSet.wasNull()).thenReturn(false);
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         assertThat(sampleBean.getLongField()).isEqualTo(aLongVal);
         assertThat(sampleBean.getPrivateBigDecimalField()).isEqualTo(aBigDecimal);
@@ -177,7 +176,7 @@ public class FieldMapperTest {
         when(resultSet.getString(2)).thenReturn("foo");
         when(resultSet.wasNull()).thenReturn(false);
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         Long expected = 123L;
         assertThat(sampleBean.getLongField()).isEqualTo(expected);
@@ -192,7 +191,7 @@ public class FieldMapperTest {
         when(resultSet.getObject(2)).thenReturn(new Object());
         when(resultSet.wasNull()).thenReturn(false);
 
-        assertThatThrownBy(() -> mapper.map(resultSet, ctx)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> sampleBeanMapper.map(resultSet, ctx)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -203,7 +202,7 @@ public class FieldMapperTest {
         when(resultSet.getLong(1)).thenReturn(expected);
         when(resultSet.getString(2)).thenReturn("foo");
 
-        SampleBean sampleBean = mapper.map(resultSet, ctx);
+        SampleBean sampleBean = sampleBeanMapper.map(resultSet, ctx);
 
         assertThat(sampleBean.getLongField()).isEqualTo(expected);
     }
@@ -212,7 +211,7 @@ public class FieldMapperTest {
     public void shouldThrowOnMismatchedColumnsStrictMatch() throws Exception {
         ctx.getConfig(ReflectionMappers.class).setStrictMatching(true);
         mockColumns("longField", "misspelledField");
-        assertThatThrownBy(() -> mapper.map(resultSet, ctx)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> sampleBeanMapper.map(resultSet, ctx)).isInstanceOf(IllegalArgumentException.class);
     }
 
     static class ColumnNameThing {
@@ -225,10 +224,9 @@ public class FieldMapperTest {
 
     @Test
     public void testColumnNameAnnotation() {
-        Handle handle = dbRule.getSharedHandle();
-        handle.execute("insert into something (id, name) values (1, 'foo')");
+        sharedHandle.execute("insert into something (id, name) values (1, 'foo')");
 
-        ColumnNameThing thing = handle.createQuery("select * from something")
+        ColumnNameThing thing = sharedHandle.createQuery("select * from something")
                 .map(FieldMapper.of(ColumnNameThing.class))
                 .one();
 
@@ -238,10 +236,9 @@ public class FieldMapperTest {
 
     @Test
     public void testNested() {
-        Handle handle = dbRule.getSharedHandle();
-        handle.execute("insert into something (id, name) values (1, 'foo')");
+        sharedHandle.execute("insert into something (id, name) values (1, 'foo')");
 
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NestedThing.class))
             .select("SELECT id, name FROM something")
             .mapTo(NestedThing.class)
@@ -252,13 +249,12 @@ public class FieldMapperTest {
 
     @Test
     public void testNestedStrict() {
-        Handle handle = dbRule.getSharedHandle();
-        handle.getConfig(ReflectionMappers.class).setStrictMatching(true);
-        handle.registerRowMapper(FieldMapper.factory(NestedThing.class));
+        sharedHandle.getConfig(ReflectionMappers.class).setStrictMatching(true);
+        sharedHandle.registerRowMapper(FieldMapper.factory(NestedThing.class));
 
-        handle.execute("insert into something (id, name) values (1, 'foo')");
+        sharedHandle.execute("insert into something (id, name) values (1, 'foo')");
 
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NestedThing.class))
             .select("select id, name from something")
             .mapTo(NestedThing.class)
@@ -266,7 +262,7 @@ public class FieldMapperTest {
             .extracting("nested.i", "nested.s")
             .containsExactly(1, "foo");
 
-        assertThatThrownBy(() -> handle
+        assertThatThrownBy(() -> sharedHandle
             .createQuery("select id, name, 1 as other from something")
             .mapTo(NestedThing.class)
             .one())
@@ -281,8 +277,7 @@ public class FieldMapperTest {
 
     @Test
     public void testNestedPresent() {
-        Handle handle = dbRule.getSharedHandle();
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NullableNestedThing.class))
             .select("SELECT 42 as testValue, 2 as i, '3' as s")
             .mapTo(NullableNestedThing.class)
@@ -293,8 +288,7 @@ public class FieldMapperTest {
 
     @Test
     public void testNestedHalfPresent() {
-        Handle handle = dbRule.getSharedHandle();
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NullableNestedThing.class))
             .select("SELECT 42 as testValue, '3' as s")
             .mapTo(NullableNestedThing.class)
@@ -305,8 +299,7 @@ public class FieldMapperTest {
 
     @Test
     public void testNestedAbsent() {
-        Handle handle = dbRule.getSharedHandle();
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NullableNestedThing.class))
             .select("SELECT 42 as testValue")
             .mapTo(NullableNestedThing.class)
@@ -317,8 +310,7 @@ public class FieldMapperTest {
 
     @Test
     public void testNullableColumnAbsentButNestedPresent() {
-        Handle handle = dbRule.getSharedHandle();
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NullableNestedThing.class))
             .select("SELECT 's' s, 1 i")
             .mapTo(NullableNestedThing.class)
@@ -329,8 +321,7 @@ public class FieldMapperTest {
 
     @Test
     public void testNoRecognizedColumns() {
-        Handle handle = dbRule.getSharedHandle();
-        assertThatThrownBy(() -> handle
+        assertThatThrownBy(() -> sharedHandle
             .registerRowMapper(FieldMapper.factory(NullableNestedThing.class))
             .select("SELECT 'foo' bar")
             .mapTo(NullableNestedThing.class)
@@ -357,10 +348,9 @@ public class FieldMapperTest {
 
     @Test
     public void testNestedPrefix() {
-        Handle handle = dbRule.getSharedHandle();
-        handle.execute("insert into something (id, name) values (1, 'foo')");
+        sharedHandle.execute("insert into something (id, name) values (1, 'foo')");
 
-        assertThat(handle
+        assertThat(sharedHandle
             .registerRowMapper(FieldMapper.factory(NestedPrefixThing.class))
             .select("select id nested_id, name nested_name from something")
             .mapTo(NestedPrefixThing.class)
@@ -371,27 +361,26 @@ public class FieldMapperTest {
 
     @Test
     public void testNestedPrefixStrict() {
-        Handle handle = dbRule.getSharedHandle();
-        handle.getConfig(ReflectionMappers.class).setStrictMatching(true);
-        handle.registerRowMapper(FieldMapper.factory(NestedPrefixThing.class));
+        sharedHandle.getConfig(ReflectionMappers.class).setStrictMatching(true);
+        sharedHandle.registerRowMapper(FieldMapper.factory(NestedPrefixThing.class));
 
-        handle.execute("insert into something (id, name, integerValue) values (1, 'foo', 5)"); // three, sir!
+        sharedHandle.execute("insert into something (id, name, integerValue) values (1, 'foo', 5)"); // three, sir!
 
-        assertThat(handle
+        assertThat(sharedHandle
             .createQuery("select id nested_id, name nested_name, integerValue from something")
             .mapTo(NestedPrefixThing.class)
             .one())
             .extracting("nested.i", "nested.s", "integerValue")
             .containsExactly(1, "foo", 5);
 
-        assertThatThrownBy(() -> handle
+        assertThatThrownBy(() -> sharedHandle
             .createQuery("select id nested_id, name nested_name, 1 as other from something")
             .mapTo(NestedPrefixThing.class)
             .one())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("could not match fields for columns: [other]");
 
-        assertThatThrownBy(() -> handle
+        assertThatThrownBy(() -> sharedHandle
             .createQuery("select id nested_id, name nested_name, 1 as nested_other from something")
             .mapTo(NestedPrefixThing.class)
             .one())
