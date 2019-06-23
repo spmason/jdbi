@@ -60,6 +60,7 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
         factories.addAll(that.factories);
         cache.putAll(that.cache);
         coalesceNullPrimitivesToDefaults = that.coalesceNullPrimitivesToDefaults;
+        registry = null;
     }
 
     /**
