@@ -19,6 +19,7 @@ import java.util.function.Function;
 
 import org.jdbi.v3.core.argument.ArgumentFactory;
 import org.jdbi.v3.core.argument.Arguments;
+import org.jdbi.v3.core.argument.QualifiedArgumentFactory;
 import org.jdbi.v3.core.array.SqlArrayArgumentStrategy;
 import org.jdbi.v3.core.array.SqlArrayType;
 import org.jdbi.v3.core.array.SqlArrayTypeFactory;
@@ -141,6 +142,17 @@ public interface Configurable<This> {
      * @return this
      */
     default This registerArgument(ArgumentFactory factory) {
+        return configure(Arguments.class, c -> c.register(factory));
+    }
+
+    /**
+     * Convenience method for {@code getConfig(Arguments.class).register(factory)}
+     *
+     * @param factory qualified argument factory
+     * @return this
+     */
+    @Beta
+    default This registerArgument(QualifiedArgumentFactory factory) {
         return configure(Arguments.class, c -> c.register(factory));
     }
 
