@@ -2,6 +2,7 @@
 - New Features
   - `ResultIterable<T>.map(Function<T, U>)` returns a `ResultIterable<U>` with elements transformed
     using the given mapper function.
+  - `NonnullColumnMapperFactory`, for all your `@javax.annotation.Nonnull` column needs.
 - Bug Fixes
   - Immutables integration doesn't respect @Value.Default for primitives that are nulled in the db
 - Improvements
@@ -11,6 +12,8 @@
 - Beta API Changes
   - add GenericTypes.box
   - QualifiedType: rename mapType -> flatMapType, add a proper mapType
+  - added `register` methods for qualified factories on `Configurable`,
+    `ColumnMappers`, and `ArgumentFactories`
 
 # 3.8.2
 - Improvements
