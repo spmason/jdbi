@@ -17,9 +17,9 @@ import javax.annotation.Nonnull;
 
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.NonnullColumnMapperFactory;
-import org.jdbi.v3.core.mapper.NonnullColumnMapperFactory.JdbiRespectNonnull;
 import org.jdbi.v3.core.mapper.reflect.ColumnName;
 import org.jdbi.v3.core.mapper.reflect.FieldMapper;
+import org.jdbi.v3.core.qualifier.Qualified;
 import org.jdbi.v3.core.rule.H2DatabaseRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -71,7 +71,7 @@ public class NonNullMapperTest {
 
     public static class NonNullItem {
         @ColumnName("col")
-        @JdbiRespectNonnull
+        @Qualified(Nonnull.class)
         @Nonnull
         private Integer col;
     }

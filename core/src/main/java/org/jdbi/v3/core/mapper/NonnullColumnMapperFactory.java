@@ -14,27 +14,22 @@
 package org.jdbi.v3.core.mapper;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.qualifier.QualifiedType;
 import org.jdbi.v3.meta.Beta;
-import org.jdbi.v3.core.qualifier.Qualifier;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * Column mapper that handles any {@link JdbiRespectNonnull} {@link QualifiedType}.
+ * Column mapper that handles any {@link Nonnull} {@link QualifiedType}.
  *
  * {@code @Nonnull} is stripped from the received qualified type,
  * the actual column mapper for the remaining qualified type is resolved,
@@ -47,7 +42,7 @@ import static java.util.stream.Collectors.toSet;
 public class NonnullColumnMapperFactory implements QualifiedColumnMapperFactory {
     @Override
     public Optional<ColumnMapper<?>> build(QualifiedType<?> type, ConfigRegistry config) {
-        return Stream.of(JdbiRespectNonnull.class, javax.annotation.Nonnull.class)
+        return Stream.of(Nonnull.class)
             .map(non -> stripFrom(non, type))
             .filter(Objects::nonNull)
             .findFirst()
@@ -67,9 +62,4 @@ public class NonnullColumnMapperFactory implements QualifiedColumnMapperFactory 
 
         return type.withAnnotations(allExceptToStrip);
     }
-
-    @Qualifier
-    @Retention(RUNTIME)
-    @Target({FIELD, PARAMETER})
-    public @interface JdbiRespectNonnull {}
 }
