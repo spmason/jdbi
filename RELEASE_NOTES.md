@@ -3,6 +3,8 @@
   - `ResultIterable<T>.map(Function<T, U>)` returns a `ResultIterable<U>` with elements transformed
     using the given mapper function.
   - `NonnullColumnMapperFactory`, for all your `@javax.annotation.Nonnull` column needs.
+  - `@Qualified` allows you to assign any annotation without its own `@Qualifier` (such as `@javax.annotation.Nonnull`)
+    as a qualifier on an SQLObject. 
 - Bug Fixes
   - Immutables integration doesn't respect @Value.Default for primitives that are nulled in the db
 - Improvements
