@@ -34,7 +34,7 @@ public class NonnullColumnMapperFactoryTest {
     @Before
     public void before() {
         db.getJdbi()
-            .registerColumnMapper(new NonnullColumnMapperFactory())
+            .configure(ColumnMappers.class, mappers -> mappers.addNonNullQualifier(Nonnull.class))
             .useHandle(h -> {
                 h.createUpdate("create table foo(id int primary key, value int)").execute();
                 h.createUpdate("insert into foo(id, value) values(:id, null)").bind("id", NULL).execute();
@@ -68,7 +68,7 @@ public class NonnullColumnMapperFactoryTest {
                 .mapTo(nonNullInt)
                 .one())
             .isInstanceOf(NullPointerException.class)
-            .hasMessage("type annotated with @Nonnull got a null value");
+            .hasMessage("type annotated with non-null qualifier got a null value");
 
         assertThat(h.createQuery("select value from foo where id = :id")
             .bind("id", NONNULL)

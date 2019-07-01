@@ -16,7 +16,7 @@ package org.jdbi.v3.sqlobject;
 import javax.annotation.Nonnull;
 
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.mapper.NonnullColumnMapperFactory;
+import org.jdbi.v3.core.mapper.ColumnMappers;
 import org.jdbi.v3.core.mapper.reflect.ColumnName;
 import org.jdbi.v3.core.mapper.reflect.FieldMapper;
 import org.jdbi.v3.core.qualifier.Qualified;
@@ -59,7 +59,7 @@ public class NonNullMapperTest {
 
     @Test
     public void nonNullIsRespected() {
-        jdbi.registerColumnMapper(new NonnullColumnMapperFactory());
+        jdbi.getConfig(ColumnMappers.class).addNonNullQualifier(Nonnull.class);
 
         jdbi.useHandle(h -> assertThatThrownBy(h.createQuery("select null as col").mapTo(NonNullItem.class)::one).isInstanceOf(NullPointerException.class));
     }
