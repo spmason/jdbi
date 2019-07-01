@@ -16,7 +16,6 @@ package org.jdbi.v3.core.qualifier;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -63,14 +62,13 @@ public class Qualifiers implements JdbiConfig<Qualifiers> {
     }
 
     private static Set<Annotation> getQualifiers(AnnotatedElement... elements) {
-        Set<Annotation> directQualifiers = Arrays.stream(elements)
+        Stream<Annotation> directQualifiers = Arrays.stream(elements)
             .filter(Objects::nonNull)
             .map(AnnotatedElement::getAnnotations)
             .flatMap(Arrays::stream)
-            .filter(anno -> anno.annotationType().isAnnotationPresent(Qualifier.class))
-            .collect(toSet());
+            .filter(anno -> anno.annotationType().isAnnotationPresent(Qualifier.class));
 
-        Set<Annotation> indirectQualifiers = Arrays.stream(elements)
+        Stream<Annotation> indirectQualifiers = Arrays.stream(elements)
             .filter(Objects::nonNull)
             .map(AnnotatedElement::getAnnotations)
             .flatMap(Arrays::stream)
@@ -78,11 +76,9 @@ public class Qualifiers implements JdbiConfig<Qualifiers> {
             .map(Qualified.class::cast)
             .map(Qualified::value)
             .flatMap(Arrays::stream)
-            .map(AnnotationFactory::create)
-            .collect(toSet());
+            .map(AnnotationFactory::create);
 
-        return Stream.of(directQualifiers, indirectQualifiers)
-            .flatMap(Collection::stream)
+        return Stream.concat(directQualifiers, indirectQualifiers)
             .collect(collectingAndThen(toSet(), Collections::unmodifiableSet));
     }
 
