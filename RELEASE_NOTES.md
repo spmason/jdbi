@@ -2,6 +2,9 @@
 - New Features
   - `ResultIterable<T>.map(Function<T, U>)` returns a `ResultIterable<U>` with elements transformed
     using the given mapper function.
+  - Added HyperSQL (HSQL) database integration.
+    - This mainly offers less painful`java.time` support.
+    - Includes a `DatabaseRule` in `core` and `JdbiRule` in `testing`.
 - Bug Fixes
   - Immutables integration doesn't respect @Value.Default for primitives that are nulled in the db
 - Improvements
