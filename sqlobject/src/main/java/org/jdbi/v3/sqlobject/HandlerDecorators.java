@@ -14,7 +14,6 @@
 package org.jdbi.v3.sqlobject;
 
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jdbi.v3.core.config.JdbiConfig;
@@ -28,7 +27,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
  * decorator will be the outermost decorator around the method handler.
  */
 public class HandlerDecorators implements JdbiConfig<HandlerDecorators> {
-    private final List<HandlerDecorator> decorators;
+    private final CopyOnWriteArrayList<HandlerDecorator> decorators;
 
     public HandlerDecorators() {
         decorators = new CopyOnWriteArrayList<>();

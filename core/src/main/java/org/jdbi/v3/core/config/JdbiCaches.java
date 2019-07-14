@@ -30,7 +30,7 @@ import org.jdbi.v3.meta.Beta;
  */
 @Beta
 public final class JdbiCaches implements JdbiConfig<JdbiCaches> {
-    private final Map<JdbiCache<?, ?>, Map<Object, Object>> caches = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<JdbiCache<?, ?>, Map<Object, Object>> caches = new ConcurrentHashMap<>();
 
     /**
      * Does not actually create a copy!!

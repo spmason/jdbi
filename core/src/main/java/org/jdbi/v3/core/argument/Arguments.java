@@ -15,7 +15,6 @@ package org.jdbi.v3.core.argument;
 
 import java.lang.reflect.Type;
 import java.sql.Types;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,7 +33,7 @@ import org.jdbi.v3.meta.Beta;
  * The factories are consulted in reverse order of registration (i.e. last-registered wins).
  */
 public class Arguments implements JdbiConfig<Arguments> {
-    private final List<QualifiedArgumentFactory> factories;
+    private final CopyOnWriteArrayList<QualifiedArgumentFactory> factories;
     private ConfigRegistry registry;
     private Argument untypedNullArgument;
 

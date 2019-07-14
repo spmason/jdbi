@@ -23,7 +23,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
  * Configuration class for reflective mappers.
  */
 public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
-    private final List<ColumnNameMatcher> columnNameMatchers;
+    private final CopyOnWriteArrayList<ColumnNameMatcher> columnNameMatchers;
     private boolean strictMatching;
 
     /**

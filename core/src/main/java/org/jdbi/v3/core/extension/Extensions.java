@@ -13,7 +13,6 @@
  */
 package org.jdbi.v3.core.extension;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,7 +23,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
  * instances.
  */
 public class Extensions implements JdbiConfig<Extensions> {
-    private final List<ExtensionFactory> factories;
+    private final CopyOnWriteArrayList<ExtensionFactory> factories;
 
     /**
      * Create an empty {@link ExtensionFactory} configuration.

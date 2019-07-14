@@ -14,7 +14,6 @@
 package org.jdbi.v3.sqlobject;
 
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -29,7 +28,7 @@ import org.jdbi.v3.core.internal.JdbiOptionals;
  * method, the last-registered factory takes precedence.
  */
 public class Handlers implements JdbiConfig<Handlers> {
-    private final List<HandlerFactory> factories;
+    private final CopyOnWriteArrayList<HandlerFactory> factories;
 
     public Handlers() {
         factories = new CopyOnWriteArrayList<>();

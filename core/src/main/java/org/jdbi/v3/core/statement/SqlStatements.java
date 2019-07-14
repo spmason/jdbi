@@ -39,7 +39,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
     private SqlLogger sqlLogger;
     private Integer queryTimeout;
     private boolean allowUnusedBindings;
-    private final Collection<StatementCustomizer> customizers;
+    private final CopyOnWriteArrayList<StatementCustomizer> customizers;
 
     public SqlStatements() {
         attributes = Collections.synchronizedMap(new HashMap<>());

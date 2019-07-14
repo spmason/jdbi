@@ -13,7 +13,6 @@
  */
 package org.jdbi.v3.postgres;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jdbi.v3.core.array.SqlArrayTypes;
@@ -27,7 +26,7 @@ import org.postgresql.util.PGobject;
  * Handler for PostgreSQL custom types.
  */
 public class PostgresTypes implements JdbiConfig<PostgresTypes> {
-    private final Map<Class<? extends PGobject>, String> types;
+    private final ConcurrentHashMap<Class<? extends PGobject>, String> types;
     private ConfigRegistry registry;
 
     @SuppressWarnings("unused")

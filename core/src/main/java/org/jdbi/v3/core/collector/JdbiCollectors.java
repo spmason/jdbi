@@ -14,7 +14,6 @@
 package org.jdbi.v3.core.collector;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collector;
@@ -26,7 +25,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
  * Contains a set of collector factories, registered by the application.
  */
 public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
-    private final List<CollectorFactory> factories;
+    private final CopyOnWriteArrayList<CollectorFactory> factories;
 
     public JdbiCollectors() {
         factories = new CopyOnWriteArrayList<>();
