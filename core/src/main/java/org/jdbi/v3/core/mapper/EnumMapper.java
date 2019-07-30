@@ -13,10 +13,12 @@
  */
 package org.jdbi.v3.core.mapper;
 
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.jdbi.v3.core.config.JdbiCache;
 import org.jdbi.v3.core.config.JdbiCaches;
@@ -79,18 +81,28 @@ public abstract class EnumMapper<E extends Enum<E>> implements ColumnMapper<E> {
         }
 
         private static Object getValueByName(Class<? extends Enum<?>> enumClass, String name) {
-            final Enum<?>[] enumConstants = enumClass.getEnumConstants();
-            return JdbiOptionals.findFirstPresent(
-                    () -> Arrays.stream(enumConstants).filter(e -> {
-                        final Field field = Unchecked.function(enumClass::getField).apply(e.name());
-                        final DatabaseValue databaseValue = field.getAnnotation(DatabaseValue.class);
-                        return databaseValue != null && databaseValue.value().equals(name);
-                    }).findFirst(),
-                    () -> Arrays.stream(enumConstants).filter(e -> e.name().equals(name)).findFirst(),
-                    () -> Arrays.stream(enumConstants).filter(e -> e.name().equalsIgnoreCase(name)).findFirst()
-                )
-                .orElseThrow(() -> new UnableToProduceResultException(
-                    String.format("no %s value could be matched to the name %s", enumClass.getSimpleName(), name)));
+            return enumConstants(enumClass).filter(databaseValueMatches(name)).findFirst()
+                .orElseGet(() ->
+                    JdbiOptionals.findFirstPresent(
+                        () -> enumConstants(enumClass).filter(e -> e.name().equals(name)).findFirst(),
+                        () -> enumConstants(enumClass).filter(e -> e.name().equalsIgnoreCase(name)).findFirst()
+                    )
+                    .orElseThrow(() -> new UnableToProduceResultException(
+                        String.format("no %s value could be matched to the name %s", enumClass.getSimpleName(), name))));
+        }
+
+        private static Predicate<Enum<?>> databaseValueMatches(String name) {
+            return e -> Optional.of(
+                Unchecked.function(e.getClass()::getField)
+                    .apply(e.name())
+                    .getAnnotation(DatabaseValue.class))
+                .map(DatabaseValue::value)
+                .map(dbName -> dbName.equals(name))
+                .orElse(false);
+        }
+
+        private static Stream<Enum<?>> enumConstants(Class<? extends Enum<?>> enumClass) {
+            return Arrays.stream(enumClass.getEnumConstants());
         }
     }
 
